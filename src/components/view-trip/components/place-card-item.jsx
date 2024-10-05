@@ -19,7 +19,6 @@ function PlaceCardItem({ place }) {
   };
   useEffect(() => {
     GetPlacePhoto();
-    console.log(place);
   }, [place]);
   return (
     <Link
