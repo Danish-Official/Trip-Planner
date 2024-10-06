@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useContext, useState } from "react";
 import GooglePlacesAutocomplete from "react-google-places-autocomplete";
 import { Input } from "../ui/input";
 import {
@@ -15,18 +15,17 @@ import {
   DialogHeader,
 } from "@/components/ui/dialog";
 import { toast } from "sonner";
-import { useGoogleLogin } from "@react-oauth/google";
-import axios from "axios";
 import { FcGoogle } from "react-icons/fc";
 import { AiOutlineLoading3Quarters } from "react-icons/ai";
 import { doc, setDoc } from "firebase/firestore";
 import { db } from "@/service/firebaseConfig";
 import { useNavigate } from "react-router-dom";
+import { AuthContext } from "../context/auth-context";
 
 function CreateTrip() {
+  const { openDialog, login, setOpenDialog } = useContext(AuthContext);
   const [place, setPlace] = useState();
   const [formData, setFormData] = useState([]);
-  const [openDialog, setOpenDialog] = useState(false);
   const [loading, setLoading] = useState(false);
   const navigate = useNavigate();
 
@@ -41,7 +40,7 @@ function CreateTrip() {
     });
   };
 
-  const onGenerateTrip = async() => {
+  const onGenerateTrip = async () => {
     const user = localStorage.getItem("user");
     if (!user) {
       setOpenDialog(true);
@@ -84,31 +83,6 @@ function CreateTrip() {
     navigate("/view-trip/" + docId);
   };
 
-  const login = useGoogleLogin({
-    onSuccess: (tokenInfo) => GetUserProfile(tokenInfo),
-    onError: (error) => console.log(error),
-  });
-
-  const GetUserProfile = (tokenInfo) => {
-    axios
-      .get(
-        `https://www.googleapis.com/oauth2/v1/userinfo?access_token=${tokenInfo?.access_token}`, // Fixed the typo here
-        {
-          headers: {
-            Authorization: `Bearer ${tokenInfo?.access_token}`,
-            Accept: "application/json",
-          },
-        }
-      )
-      .then((resp) => {
-        localStorage.setItem("user", JSON.stringify(resp.data));
-        setOpenDialog(false);
-        onGenerateTrip();
-      })
-      .catch((error) => {
-        console.error("Error fetching user profile information:", error);
-      });
-  };
   return (
     <div className="sm:px-10 md:px-32 lg:px-56 xl:px-72 px-5 mt-[91.25px]">
       <h2 className="font-bold text-3xl text-[#364F6B]">
@@ -116,10 +90,8 @@ function CreateTrip() {
       </h2>
       <p className="mt-3 text-gray-500 text-xl">
         Just provide some basic information, and our{" "}
-        <span className="text-[#FCE44D]">
-          VoyageVista
-        </span>{" "}
-        will generate a customized itinerary based on your preferences.
+        <span className="text-[#FCE44D]">VoyageVista</span> will generate a
+        customized itinerary based on your preferences.
       </p>
 
       <div className="mt-20 flex flex-col gap-10">
@@ -200,11 +172,7 @@ function CreateTrip() {
           </div>
         </div>
         <div className="my-10 justify-end flex">
-          <Button
-            disabled={loading}
-            onClick={onGenerateTrip}
-            className="w-28"
-          >
+          <Button disabled={loading} onClick={onGenerateTrip} className="w-28">
             {loading ? (
               <AiOutlineLoading3Quarters className="h-7 w-7 animate-spin" />
             ) : (

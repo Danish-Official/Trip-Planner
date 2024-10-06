@@ -1,54 +1,25 @@
-import { useEffect, useState } from "react";
 import { Button } from "../ui/button";
 import {
   Popover,
   PopoverContent,
   PopoverTrigger,
 } from "@/components/ui/popover";
-import { googleLogout, useGoogleLogin } from "@react-oauth/google";
+import { googleLogout } from "@react-oauth/google";
 import {
   Dialog,
   DialogContent,
   DialogDescription,
   DialogHeader,
 } from "@/components/ui/dialog";
-import axios from "axios";
 import { FcGoogle } from "react-icons/fc";
 import "../../App.css";
 import { Link } from "react-router-dom";
+import { useContext } from "react";
+import { AuthContext } from "../context/auth-context";
 
 function Header() {
-  const user = JSON.parse(localStorage.getItem("user"));
-  const [openDialog, setOpenDialog] = useState(false);
-
-  const login = useGoogleLogin({
-    onSuccess: (tokenInfo) => GetUserProfile(tokenInfo),
-    onError: (error) => console.log(error),
-  });
-
-  useEffect(()=>{},[])
-
-  const GetUserProfile = (tokenInfo) => {
-    axios
-      .get(
-        `https://www.googleapis.com/oauth2/v1/userinfo?access_token=${tokenInfo?.access_token}`,
-        {
-          headers: {
-            Authorization: `Bearer ${tokenInfo?.access_token}`,
-            Accept: "application/json",
-          },
-        }
-      )
-      .then((resp) => {
-        console.log(resp);
-        localStorage.setItem("user", JSON.stringify(resp.data));
-        setOpenDialog(false);
-        window.location.reload();
-      })
-      .catch((error) => {
-        console.error("Error fetching user profile information:", error);
-      });
-  };
+  const { user, setUser, openDialog, login, setOpenDialog } =
+    useContext(AuthContext);
 
   return (
     <>
@@ -64,14 +35,10 @@ function Header() {
           {user ? (
             <div className="flex items-center gap-3 text-white">
               <Link to={"/create-trip"} className="text-white">
-                <Button>
-                  + Create Trip
-                </Button>
+                <Button>+ Create Trip</Button>
               </Link>
               <Link to={"/my-trips"} className="text-white">
-                <Button>
-                  My Trips
-                </Button>
+                <Button>My Trips</Button>
               </Link>
 
               <Popover>
@@ -84,8 +51,9 @@ function Header() {
                 </PopoverTrigger>
                 <PopoverContent className="outline-none border-none">
                   <Button
-                      onClick={() => {
+                    onClick={() => {
                       googleLogout();
+                      setUser();
                       localStorage.clear();
                       window.location.href = "/";
                     }}
@@ -96,11 +64,7 @@ function Header() {
               </Popover>
             </div>
           ) : (
-            <Button
-              onClick={() => setOpenDialog(true)}
-            >
-              Sign In
-            </Button>
+            <Button onClick={() => setOpenDialog(true)}>Sign In</Button>
           )}
         </div>
         <Dialog open={openDialog} onOpenChange={setOpenDialog}>
